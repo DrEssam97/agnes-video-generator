@@ -6,24 +6,23 @@ on:
 jobs:
   render:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        ref: [master, fix/arabic-subtitles]
     steps:
       - uses: actions/checkout@v4
         with:
           path: check
       - uses: actions/checkout@v4
         with:
-          ref: ${{ matrix.ref }}
+          repository: lcy362/agnes-video-generator
+          ref: master
           path: app
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
       - run: python -m pip install -r app/requirements.txt
       - run: dpkg -l | grep -i fribidi || echo "no fribidi"
-      - run: python check/.github/arabic-check/harness.py app out.png
+      - run: git -C app log --oneline -1
+      - run: python check/.github/arabic-check/recheck.py app out
       - uses: actions/upload-artifact@v4
         with:
-          name: subtitles-${{ strategy.job-index }}
-          path: out.png
+          name: recheck-linux
+          path: out/*.png
