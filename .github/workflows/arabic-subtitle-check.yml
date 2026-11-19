@@ -1,0 +1,29 @@
+name: Arabic subtitle check (fork only)
+on:
+  push:
+    branches: [ci/arabic-subtitle-check]
+  workflow_dispatch:
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        ref: [master, fix/arabic-subtitles]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: check
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ matrix.ref }}
+          path: app
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install -r app/requirements.txt
+      - run: dpkg -l | grep -i fribidi || echo "no fribidi"
+      - run: python check/.github/arabic-check/harness.py app out.png
+      - uses: actions/upload-artifact@v4
+        with:
+          name: subtitles-${{ strategy.job-index }}
+          path: out.png
